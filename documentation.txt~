@@ -1,0 +1,9 @@
+Extract to /home/flownet/
+Configure flownet.conf
+	Example/Testing values pre-inserted
+Edit /etc/cronjob to have /home/flownet/flownet.sh run at startup
+	Insert line "/home/flownet/flownet.sh"
+
+
+SCP no password setup
+	local and remote

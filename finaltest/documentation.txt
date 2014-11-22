@@ -1,0 +1,13 @@
+Requires
+	bash
+tar -xvzf Flownet_final.tar.gz 
+Configure flownet.conf
+
+
+Adding servers to Flownetwork
+	Contact admin of remote server
+	Have download Flownet (URL)
+
+
+TESTING
+	Using oak as second server

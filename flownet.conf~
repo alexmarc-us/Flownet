@@ -1,0 +1,58 @@
+#!/bin/bash
+#
+# Flownet configuration file
+
+### LOCAL VARIABLES: The local install of Flownet will use these
+# WAITTIME: Amount of time to loop (in seconds) before initiating server checks
+WAITTIME=
+
+# CHECKSERVERS: List of all the servers to be checked for backup/restore by the local Flownet install
+#	This is a space-deliminated list of server IPs
+#	You can use the server hostnames so long as they are within the same LAN
+CHECKSERVERS=()
+
+
+### REMOTE VARIABLES: Remote installs of Flownet will download this file and use these
+# BACKUP: Where you want the remote Flownet install to backup from
+#	*NOTE*: BACKUP value must contain trailing /
+BACKUP=
+
+# RESTORE: Where you want the remote installs of Flownet to restore data to
+#	*NOTE*: RESTORE value must contain trailing /
+RESTORE=
+
+# ACTION: What action you would like the remote flownet install to perform upon connection
+#	Options:
+#		backup: Backup any files in the BACKUP location
+#		restore: Restore old backup files to RESTORE location
+#		<anything else>: Do nothing
+ACTION=
+
+# ==========YOU DON'T NEED TO EDIT ANYTHING BENEATH THIS LINE============
+# This section checks if any of the variables have already been set so that importing the remote flownet.conf doesn't change them
+case $WAIT in
+	'')
+		WAIT=$WAITTIME
+		;;
+	*)
+		# Do nothing, already set
+		;;
+esac
+	
+case $SERVERS in
+	'')
+		SERVERS=$CHECKSERVERS
+		;;
+	*)
+		# Do nothing, already set
+		;;
+esac
+
+case $FLOWNETPASS in
+	'')
+		FLOWPASS=$FLOWNETPASS
+		;;
+	*)
+		# Do nothing, already set
+		;;
+esac

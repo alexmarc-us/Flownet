@@ -1,0 +1,21 @@
+Requires
+	bash
+Extract to /home/flownet/
+Configure flownet.conf
+	Example/Testing values pre-inserted
+
+Edit /etc/cronjob to have /home/flownet/flownet.sh run at startup
+	Insert line "/home/flownet/flownet.sh"
+
+Adding servers to Flownetwork
+	Contact admin of remote server
+	Have download Flownet (URL)
+	
+	
+
+SCP no password setup
+	local and remote
+
+
+TESTING
+	Using oak as second server
