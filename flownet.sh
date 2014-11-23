@@ -4,78 +4,83 @@
 # Flownet : Automated Networked Backup and Restoration
 # Fall 2009
 # Connecticut College Computer Science 495
+# amarcus@conncoll.edu
 
+
+#### Flowlog method
+# flowlog message
+flowout () {
+    echo $1 >>/home/flownet/flowlog.txt
+}
 
 #### Backup method
 # backup servername
 backup() {
-    echo "Flowout: Attempting to backup ${1}..."
+    flowout "Attempting to backup ${1}..."
 
     # Possible first-ever backup, attempt to create backup folder (suppressing output)
     mkdir ./backups/ 2>/dev/null
     
     # Set date as the current date in the format MM-DD-YYYY-HH:MM:SS
     date=`date +%m-%d-%Y-%T`
-    
-    # Set backup as desired backup location (from flownet-servers[i].conf)
-    backup=/home/flownet/dummies/
 
-    # Set backupto as location of backup folder
-    backupto=./backups/backup-$1.$date
+    # Set BACKUPTO as location of backup folder
+    BACKUPTO=./backups/backup-$1.$date
     
     # Check if prior backup folder exists
     ls ./backups/backup-$1.* 2>/dev/null
     if [ $? -eq 0 ]
     then
-	# Set lastbackup as last modified backup directory
-	lastbackup=`ls -t -r -1 -d ./backups/*/ | tail -n 1`
+	# Set LASTBACKUP as last modified backup directory
+	LASTBACKUP=`ls -t -r -1 -d ./backups/*/ | tail -n 1`
 
-	echo "Flowout: Prior backup for ${1} exists at ${lastbackup}!"
+	flowout "Prior backup for ${1} exists at ${LASTBACKUP}!"
 	
-	echo "Flowout: Creating new backup folder for ${1} at ${backupto}..."
+	flowout "Creating new backup folder for ${1} at ${BACKUPTO}..."
 
 	# Create server.date folder with previous backup data
-        cp -rf --preserve=all $lastbackup $backupto
+        cp -rf --preserve=all $LASTBACKUP $BACKUPTO
 	
-	echo "Flowout: Syncing remote data at ${1}:${backup} with previous backup..."
+	flowout "Syncing remote data at ${1}:${BACKUP} with previous backup..."
 
 	# rsync previous backup directory with files in desired backup folder
 	# -a = archive mode for symbolic link, devices, attributes, permissions, and ownership preservation, same as -rlptgoD (no -H)
 	# -q = quiet mode, no output exept errors
 	# -z = compression to reduce size of data portions
 	# --delete = delete files that were removed from source
-	rsync -aqz --delete $1:$backup $backupto
+	rsync -aqz --delete $1:$BACKUP $BACKUPTO
 
 	if [ $? -eq 0 ] # This checks the exit code of rsync, 0 = OK
 	then
 	    
-	    echo "Flowout: Backup of ${1}:${backup} to ${backupto} was successful!  Moving to next server..."
+	    flowout "Backup of ${1}:${BACKUP} to ${BACKUPTO} was successful!  Moving to next server..."
 	    
 	else
 
-	    echo "Flowout: Backup of ${1}:${backup} to ${backupto} failed with error code ${?}!  Moving to next server..."
+	    flowout "Backup of ${1}:${BACKUP} to ${BACKUPTO} failed with error code ${?}!  Moving to next server..."
 	fi
 
     else
-	echo "Flowout: Prior backup for ${1} does not yet exist!  Creating backup folder ${backupto}"
+	flowout "Prior backup for ${1} does not yet exist!  Creating backup folder ${BACKUPTO}"
 
 	# Create backup folder
-	mkdir $backupto
+	mkdir $BACKUPTO
 
         # rsync to new backup directory with files in desired backup folder
 	# -a = archive mode for symolic link, devices, attributes, permissions, and ownership preservation, same as -rlptgoD (no -H)
+	# -r = recursive mode
 	# -q = quiet mode, no output exept errors
 	# -z = compression to reduce size of data portions
-	rsync -aqz $1:$backup $backupto
+	rsync -arqz $1:$BACKUP $BACKUPTO
 	
 	if [ $? -eq 0 ] # This checks the exit code of rsync, 0 = OK
 	then
 	    
-	    echo "Flowout: Backup of ${1}:${backup} to ${backupto} was successful!  Moving to next server..."
+	    flowout "Backup of ${1}:${BACKUP} to ${BACKUPTO} was successful!  Moving to next server..."
 	    
 	else
 
-	    echo "Flowout: Backup of ${1}:${backup} to ${backupto} failed with error code ${?}!  Moving to next server..."
+	    flowout "Backup of ${1}:${BACKUP} to ${BACKUPTO} failed with error code ${?}!  Moving to next server..."
 	fi
 
     fi
@@ -85,53 +90,48 @@ backup() {
 #### Restore method
 # restore servername
 restore() {
-    echo "Flowout: Attempting to restore ${1}..."
+    flowout "Attempting to restore ${1}..."
 
-    # Set restore as location of desired restore location (from flownet-servers[i].conf)
-    restore=/home/flownet/dummies
-
-    # Check if prior backup folder exists
-    ls ./backups/backup-$1.* 2>/dev/null
+    # Check if prior backup folder exists (suppressing output)
+    ls ./backups/backup-$1.* >/dev/null
     if [ $? -eq 0 ]
     then
 	# Set lastbackup as last modified backup directory
-	lastbackup=`ls -t -r -1 -d ./backups/*/ | tail -n 1`
+	LASTBACKUP=`ls -t -r -1 -d ./backups/backup-${1}.* | tail -n 1`
 
-	echo "Flowout: Prior backup for ${1} exists at ${lastbackup}!"
+	flowout "Prior backup for ${1} exists at ${LASTBACKUP}!"
     
-	echo "Flowout: Attempting to restore files from ${lastbackup} to remote location ${1}:${restore}..."
+	flowout "Attempting to restore files from ${LASTBACKUP} to remote location ${1}:${RESTORE}..."
 
 	# rsync previous backup directory with desired location on remote server
 	# -a = archive mode for symolic link, devices, attributes, permissions, and ownership preservation, same as -rlptgoD (no -H)
+	# -r = recursive mode
 	# -q = quiet mode, no output exept errors
 	# -z = compression to reduce size of data portions
-	rsync -aqz $lastbackup flownet@$1:$restore
+	rsync -arqz $LASTBACKUP/* flownet@$1:$RESTORE
 
 	if [ $? -eq 0 ] # This checks the exit code of rsync, 0 = OK
 	then
 	    
-	    echo "Flowout: Restore of ${1}:${restore} from ${lastbackup} was successful!  Moving to next server..."
+	    flowout "Restore of ${1}:${RESTORE} from ${LASTBACKUP} was successful!  Moving to next server..."
 	    
 	else
 
-	    echo "Flowout: Restore of ${1}:${backup} from ${backupto} failed with error code ${?}!  Moving to next server..."
+	    flowout "Restore of ${1}:${RESTORE} from ${LASTBACKUP} failed with error code ${?}!  Moving to next server..."
 	fi
 
     else
 
-	echo "Flowout: No valid previous backup was found for ${1}!  Moving to next server..."
+	flowout "No valid previous backup was found for ${1}!  Moving to next server..."
 
     fi
 }
 
 
-
 #### Main Flownet
-# Get time setting (from local flownet.conf)
-WAIT=1
 
-# Get servers to check (from local flownet.conf)
-servers=("localhost")
+# Import settings from local flownet.conf
+. /home/flownet/flownet.conf
 
 # Loop this script forever
 while [ 1 ]
@@ -144,56 +144,71 @@ do
 	let WAITCOUNT++
     done
     
-    echo "Flowout: Time to start the flow..."
+    flowout "Time to start the flow..."
     
     # Loop through servers, executing server checks
-    len=${#servers[@]}
+    len=${#SERVERS[@]}
     i=0
     while [ $i -lt $len ]
     do
-	echo "len = ${len} i = ${i}"
-	# Ping servers[i] 5 times
-	echo "Flowout: Trying to ping server ${servers[$1]}"
-	ping -q -c 5 ${servers[$i]}
+	# Ping SERVERS[i] 5 times
+	flowout "Trying to ping server ${SERVERS[$1]}"
+	ping -q -c 5 ${SERVERS[$i]}
 	if [ $? -eq 0 ] # This checks the exit code of the ping command, 0 = good pings
 	then
-	    echo "Flowout: Server ${servers[$i]} appears to be up, attempting to download configuration file..."
-	    scp flownet@${servers[$i]}:/home/flownet/flownet.conf flownet-${servers[$i]}.conf
+	    flowout "Server ${SERVERS[$i]} appears to be up, attempting to download configuration file..."
+	    scp flownet@${SERVERS[$i]}:/home/flownet/flownet.conf flownet-${SERVERS[$i]}.conf
 
-	    # Check if scp worked and flownet-servers[i].conf exists
+	    # Check if scp worked and flownet-SERVERS[i].conf exists
 	    if [ $? -eq 0 ] # Again, 0 = good
 	    then
-		echo "Flowout: Flownet configuration file from ${servers[$i]} successfully acquired!"
-	        # Set action as action switch (from flownet-servers[i].conf)
-		action=restore
+		# Import settings from flownet-SERVERS[i].conf
+		. flownet-${SERVERS[$i]}.conf
+		flowout "Flownet configuration file from ${SERVERS[$i]} successfully acquired!"
 
-		# Call appropriate action function
-		case $action in
-		    backup)
-		        echo "Flowout: Backup action is set!"
-			backup ${servers[$i]}
-			;;
-		    restore)
-			echo "Flowout: Restore action is set!"
-		        restore ${servers[$i]}
-			;;
-		    *)
-		        echo "Flowout: Invalid action switch set for ${servers[$i]}, moving to next server..."
-			;;
-		esac
-		
-		# Clean up
-		rm flownet-${servers[$i]}.conf
-		
-		let i++
+		flowout "Attempting to lock Flownet installation at ${SERVERS[$i]}..."
+		scp flowlock.conf flownet@${SERVERS[$i]}:/home/flownet/flownet.conf
 
+		# Check if locking scp worked
+		if [ $? -eq 0 ] # 0 = good
+	        then
+		    flowout "Flownet installation at ${SERVERS[$i]} was successfully locked!"
+		    # Call appropriate action function
+		    case $ACTION in
+			backup)
+		            flowout "Backup action is set!"
+			    backup ${SERVERS[$i]}
+			    ;;
+			restore)
+			    flowout "Restore action is set!"
+		            restore ${SERVERS[$i]}
+			    ;;
+			*)
+		            flowout "Invalid action switch set for ${SERVERS[$i]}, moving to next server..."
+			    ;;
+		    esac
+		
+		    # Restore remote server's configuration file
+		    scp flownet-${SERVERS[$i]}.conf flownet@${SERVERS[$i]}:/home/flownet/flownet.conf
+		    # Clean up
+		    rm flownet-${SERVERS[$i]}.conf
+		
+		    let i++
+		else
+		    flowout "Unable to lock ${SERVERS[$i]} Flownet installation!  Moving to next server..."
+
+		    # Clean up
+		    rm flownet-${SERVERS[$i]}.conf
+		    
+		    let i++
+		fi
 	    else
-		echo "Flowout: Unable to acquire ${servers[$i]} configuration file!  Moving to next server..."
+		flowout "Unable to acquire ${SERVERS[$i]} configuration file!  Moving to next server..."
 		let i++
 	    fi  
 
 	else
-	    echo "Flowout: Server ${servers[$i]} isn't responding, moving to next server..."
+	    flowout "Server ${SERVERS[$i]} isn't responding, moving to next server..."
 	    let i++
 	fi
 
